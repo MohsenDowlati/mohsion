@@ -1,61 +1,71 @@
-'use client';
+"use client"
 
-import { TaskPriority } from "@/types/task";
-import { useState } from "react";
+import { TaskPriority } from "@/types/task"
+import { useState, useRef, useEffect } from "react"
 
 type Props = {
-  onSelect: (val: TaskPriority) => void;
-};
+  onSelect: (val: TaskPriority) => void
+  value?: TaskPriority
+}
 
-export default function Dropdown({ onSelect }: Props) {
-  const [open, setOpen] = useState(false);
-  const [text, setText] = useState("Select Priority ▾");
+export default function Dropdown({ onSelect, value = "low" }: Props) {
+  const [open, setOpen] = useState(false)
+  const [selected, setSelected] = useState<TaskPriority>(value)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  const options: { val: TaskPriority; label: string; color: string }[] = [
+    { val: "low", label: "Low", color: "text-emerald-400" },
+    { val: "medium", label: "Medium", color: "text-amber-400" },
+    { val: "high", label: "High", color: "text-red-400" },
+  ]
+
+  const current = options.find((o) => o.val === selected) ?? options[0]
 
   const select = (val: TaskPriority) => {
-    onSelect(val);
-    setText(val);
-    setOpen(false);
-  };
+    setSelected(val)
+    onSelect(val)
+    setOpen(false)
+  }
 
   return (
-    <div className="relative w-full inline-block text-left">
+    <div ref={ref} className="relative w-full inline-block text-left">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-4 py-2 rounded-lg bg-slate-800 text-white border border-cyan-400/40
-        hover:bg-slate-700 hover:border-cyan-400
-        shadow-[0_0_10px_rgba(34,211,238,0.4)]
-        transition-all duration-200"
+        className="w-full px-4 py-2 rounded-lg bg-slate-800 text-white border border-blue-400/40
+        hover:bg-slate-700 hover:border-blue-400
+        transition-all duration-200 flex items-center justify-between"
       >
-        {text}
+        <span className={current.color}>{current.label}</span>
+        <span className={`text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
 
       {open && (
-        <div
-          className="absolute right-0 mt-2 w-full rounded-lg bg-slate-900 border border-cyan-400/30
-          shadow-xl backdrop-blur-md overflow-hidden"
-        >
-          <button
-            className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-green-400 hover:text-black transition"
-            onClick={() => {select("low")}}
-          >
-            Low
-          </button>
-
-          <button
-            className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-yellow-400 hover:text-black transition"
-            onClick={() => select("medium")}
-          >
-            Medium
-          </button>
-
-          <button
-            className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-red-500 hover:text-black transition"
-            onClick={() => select("high")}
-          >
-            High
-          </button>
+        <div className="absolute right-0 left-0 mt-2 rounded-lg bg-slate-900 border border-blue-400/30 shadow-xl overflow-hidden animate-scale-in z-50">
+          {options.map((opt) => (
+            <button
+              key={opt.val}
+              className={`block w-full text-left px-4 py-2 text-sm transition-all duration-150 ${
+                selected === opt.val
+                  ? "bg-blue-500/20 text-blue-300"
+                  : "text-slate-200 hover:bg-slate-800"
+              }`}
+              onClick={() => select(opt.val)}
+            >
+              <span className={opt.color}>{opt.label}</span>
+            </button>
+          ))}
         </div>
       )}
     </div>
-  );
+  )
 }

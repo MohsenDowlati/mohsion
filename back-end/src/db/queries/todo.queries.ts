@@ -21,11 +21,12 @@ ORDER BY l.position ASC, t.position ASC, t.id ASC;
 
 export const UPDATE_TASK = `
 UPDATE tasks
-SET title = COALESCE($2, title),
-    description = COALESCE($3, description),
-    position = COALESCE($4, position),
-    completed = COALESCE($5, completed),
-    priority = COALESCE($6, priority),
+SET list_id = COALESCE($2, list_id),
+    title = COALESCE($3, title),
+    description = COALESCE($4, description),
+    position = COALESCE($5, position),
+    completed = COALESCE($6, completed),
+    priority = COALESCE($7, priority),
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;

@@ -3,13 +3,15 @@ import authReducer from "@/features/auth/authSlice"
 import workspaceReducer from "@/features/workspaces/workspaceSlice"
 import listReducer from "@/features/lists/listSlice"
 import taskReducer from "@/features/tasks/taskSlice"
+import toastReducer from "@/features/toasts/toastSlice"
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     workspaces: workspaceReducer,
     lists: listReducer,
-    tasks: taskReducer
+    tasks: taskReducer,
+    toasts: toastReducer,
   }
 })
 

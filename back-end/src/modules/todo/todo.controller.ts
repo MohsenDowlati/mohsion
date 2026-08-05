@@ -3,24 +3,21 @@ import { z } from "zod";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as todoService from "./todo.service.js";
 
-  
-  
 const taskSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional().nullable(),
   position: z.number().int().nonnegative().default(0),
   priority: z.string().min(1),
 });
+
 const updateTaskSchema = z.object({
+  list_id: z.string().uuid().optional(),
   title: z.string().min(1).optional(),
   description: z.string().optional().nullable(),
   position: z.number().int().nonnegative().optional(),
   completed: z.boolean().optional(),
   priority: z.string().min(1).optional(),
 });
-  
-
-  
 
 export const getListTasks = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.id;
@@ -73,5 +70,3 @@ export const deleteTask = asyncHandler(async (req: Request, res: Response) => {
   const data = await todoService.removeTask(req.params.taskId);
   res.json(data);
 });
-
-  

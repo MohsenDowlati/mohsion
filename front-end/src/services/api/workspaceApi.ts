@@ -57,4 +57,26 @@ export const workspaceApi = {
   return data as Workspace
   },
 
+  async redeemInvite(token: string, userId: string): Promise<Workspace> {
+    const authToken = getLocalStorage(STORAGE_KEYS.TOKEN, null)
+    const response = await fetch(`${API_URL}/workspace/membership`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ workId: token, userId, role: "editor" })
+    })
+
+    const data = await response.json().catch(() => null) as
+      | Workspace
+      | { message?: string }
+      | null
+
+    if (!response.ok) {
+      throw new Error("Invalid or expired invite")
+    }
+
+    return data as Workspace
+  },
 }

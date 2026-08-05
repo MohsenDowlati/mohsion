@@ -40,6 +40,7 @@ export const getWorkspaceTasks = async (workspaceId: string, userId: string) => 
 export const updateListTask = async (
   taskId: string,
   data: {
+    list_id?: string | undefined;
     title?: string | undefined;
     description?: string | null | undefined;
     position?: number | undefined;
@@ -47,7 +48,15 @@ export const updateListTask = async (
     priority?: string | undefined;
   }
 ) => {
-  const task = await updateTask(taskId, data.title, data.description, data.position, data.completed, data.priority);
+  const task = await updateTask(
+    taskId,
+    data.list_id,
+    data.title,
+    data.description,
+    data.position,
+    data.completed,
+    data.priority
+  );
   if (!task) throw makeError("Task not found", 404);
   return task;
 };

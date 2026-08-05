@@ -21,17 +21,17 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+    "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]"
 
   const variants = {
     primary:
-      "bg-cyan-500 text-black hover:bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.6)]",
+      "bg-blue-600 text-white hover:bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.5)] hover:shadow-[0_0_18px_rgba(59,130,246,0.7)]",
     secondary:
-      "bg-gray-900 border border-cyan-500/30 text-cyan-400 hover:border-cyan-400",
+      "bg-slate-900 border border-blue-500/30 text-blue-400 hover:border-blue-400 hover:bg-slate-800",
     danger:
-      "bg-red-500 text-white hover:bg-red-400",
+      "bg-red-500 text-white hover:bg-red-400 shadow-[0_0_12px_rgba(239,68,68,0.4)]",
     ghost:
-      "text-cyan-400 hover:bg-cyan-500/10"
+      "text-blue-400 hover:bg-blue-500/10"
   }
 
   const sizes = {
@@ -46,7 +46,12 @@ export default function Button({
       disabled={loading || props.disabled}
       {...props}
     >
-      {loading ? "Loading..." : children}
+      {loading ? (
+        <span className="flex items-center gap-2">
+          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-slow" />
+          Loading...
+        </span>
+      ) : children}
     </button>
   )
 }
