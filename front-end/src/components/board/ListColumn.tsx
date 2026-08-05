@@ -61,6 +61,12 @@ export default function ListColumn({ title, id }: Props) {
 
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
+
+    if (!taskTitle.trim()) {
+      dispatch(addToast({ message: "Task title cannot be empty", type: "warning" }))
+      return
+    }
+
     setError("")
     setLoading(true)
 
@@ -90,7 +96,7 @@ export default function ListColumn({ title, id }: Props) {
     <>
       <div
         ref={setNodeRef}
-        className={`bg-slate-900 rounded-xl p-4 w-80 shrink-0 min-h-[200px] border transition-all duration-200 ${
+        className={`bg-slate-900 rounded-xl p-3 sm:p-4 w-72 sm:w-80 shrink-0 min-h-[200px] border transition-all duration-200 ${
           isOver
             ? "border-blue-500 drag-over"
             : "border-slate-700/50"

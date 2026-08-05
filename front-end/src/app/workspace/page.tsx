@@ -52,7 +52,10 @@ export default function WorkspacePage() {
   }
 
   const createWorkspace = async () => {
-    if (!name.trim()) return
+    if (!name.trim()) {
+      dispatch(addToast({ message: "Workspace name cannot be empty", type: "warning" }))
+      return
+    }
     setLoading(true)
     setError("")
 
@@ -71,16 +74,16 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-950 text-white p-8 md:p-12">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-950 text-white p-4 sm:p-8 md:p-12">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-10 animate-fade-in-down">
-          <h1 className="text-3xl md:text-4xl font-bold text-blue-400 mb-2">
+        <div className="mb-8 sm:mb-10 animate-fade-in-down">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-400 mb-2">
             Your Workspaces
           </h1>
           <p className="text-slate-400">Organize your projects and collaborate with your team.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 mb-10 animate-fade-in-up">
+        <div className="flex flex-col sm:flex-row gap-3 mb-8 sm:mb-10 animate-fade-in-up">
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -104,11 +107,11 @@ export default function WorkspacePage() {
         {error && <p className="text-sm text-red-400 mb-6">{error}</p>}
 
         {!loaded ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="p-6 bg-slate-900 border border-slate-700/50 rounded-xl min-h-[200px]"
+                className="p-5 sm:p-6 bg-slate-900 border border-slate-700/50 rounded-xl min-h-[180px] sm:min-h-[200px]"
               >
                 <div className="h-8 w-32 skeleton rounded mb-4" />
                 <div className="h-4 w-48 skeleton rounded mb-2" />
@@ -123,16 +126,16 @@ export default function WorkspacePage() {
             <p className="text-slate-600 text-sm">Create your first workspace above to get started.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 stagger">
             {workspaces.map((ws, i) => (
               <div
                 key={ws.id}
                 onClick={() => router.push(`/workspace/${ws.id}`)}
-                className="group flex flex-col justify-between p-6 bg-slate-900 border border-blue-500/20 rounded-xl cursor-pointer hover:border-blue-400 hover:shadow-[0_0_24px_rgba(59,130,246,0.2)] transition-all duration-300 min-h-[200px] hover:-translate-y-1"
+                className="group flex flex-col justify-between p-5 sm:p-6 bg-slate-900 border border-blue-500/20 rounded-xl cursor-pointer hover:border-blue-400 hover:shadow-[0_0_24px_rgba(59,130,246,0.2)] transition-all duration-300 min-h-[180px] sm:min-h-[200px] hover:-translate-y-1"
                 style={{ "--i": i } as React.CSSProperties}
               >
                 <div>
-                  <h2 className="text-2xl font-semibold text-white mb-2 group-hover:text-blue-300 transition-colors">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-white mb-2 group-hover:text-blue-300 transition-colors">
                     {ws.name}
                   </h2>
                   <p className="text-sm text-slate-500">

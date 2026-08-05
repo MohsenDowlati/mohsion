@@ -124,3 +124,9 @@ body {
 .modal-backdrop {
   backdrop-filter: blur(4px);
 }
+
+/* ===== Snackbar progress bar ===== */
+@keyframes shrinkBar {
+  from { width: 100%; }
+  to { width: 0%; }
+}

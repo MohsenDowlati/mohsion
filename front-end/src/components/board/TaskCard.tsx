@@ -118,7 +118,7 @@ export default function TaskCard({ task }: { task: Task }) {
         </div>
 
         {/* Action buttons - revealed on hover */}
-        <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="flex gap-2 mt-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
           <button
             onClick={() => {
               setEditTitle(task.title)

@@ -38,7 +38,7 @@ export default function Modal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         onClick={onClose}
         className="absolute inset-0 bg-black/70 modal-backdrop animate-fade-in"
@@ -46,7 +46,7 @@ export default function Modal({
 
       <div
         className={clsx(
-          "relative w-full max-w-lg rounded-xl bg-slate-950 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.2)] p-6 animate-scale-in",
+          "relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-slate-950 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.2)] p-5 sm:p-6 animate-scale-in",
           className
         )}
       >

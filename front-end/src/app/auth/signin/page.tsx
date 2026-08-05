@@ -42,13 +42,13 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 px-4">
-      <div className="mb-8 animate-fade-in-down">
-        <Logo href={null as unknown as string} size={56} />
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 px-4 py-8">
+      <div className="mb-6 sm:mb-8 animate-fade-in-down">
+        <Logo href={null as unknown as string} size={48} />
       </div>
 
-      <div className="w-full max-w-md p-8 bg-slate-900 border border-blue-500/30 rounded-xl shadow-[0_0_24px_rgba(59,130,246,0.15)] animate-scale-in">
-        <h1 className="text-3xl font-semibold text-center text-blue-400 mb-2">Sign In</h1>
+      <div className="w-full max-w-md p-6 sm:p-8 bg-slate-900 border border-blue-500/30 rounded-xl shadow-[0_0_24px_rgba(59,130,246,0.15)] animate-scale-in">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-center text-blue-400 mb-2">Sign In</h1>
         <p className="text-center text-slate-500 text-sm mb-6">Welcome back to mohsion</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">

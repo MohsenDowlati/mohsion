@@ -2,12 +2,13 @@
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 
-export type ToastType = "success" | "error" | "info"
+export type ToastType = "success" | "error" | "warning" | "info"
 
 export interface Toast {
   id: string
   message: string
   type: ToastType
+  duration?: number
 }
 
 interface ToastState {
@@ -24,9 +25,13 @@ const toastSlice = createSlice({
   name: "toasts",
   initialState,
   reducers: {
-    addToast: (state, action: PayloadAction<Omit<Toast, "id">>) => {
-      const id = `toast-${++counter}`
-      state.toasts.push({ ...action.payload, id })
+    addToast: {
+      reducer: (state, action: PayloadAction<Toast>) => {
+        state.toasts.push(action.payload)
+      },
+      prepare: (toast: Omit<Toast, "id">) => ({
+        payload: { ...toast, id: `toast-${++counter}` },
+      }),
     },
     removeToast: (state, action: PayloadAction<string>) => {
       state.toasts = state.toasts.filter((t) => t.id !== action.payload)
