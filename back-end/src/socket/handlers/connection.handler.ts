@@ -1,6 +1,10 @@
-import type { Socket } from "socket.io";
-import { registerTodoEvents } from "./todo.handler.js";
+import { Socket } from "socket.io";
+import { registerWorkspaceHandlers } from "./workspace.handler.js";
+import { registerListHandlers } from "./list.handler.js";
+import { registerTaskHandlers } from "./todo.handler.js";
 
-export const registerConnectionHandler = (socket: Socket) => {
-  registerTodoEvents(socket);
-};
+export function registerConnectionHandler(socket: Socket) {
+  registerWorkspaceHandlers(socket);
+  registerListHandlers(socket);
+  registerTaskHandlers(socket);
+}

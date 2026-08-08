@@ -20,6 +20,8 @@ export const DB_NAME = required("POSTGRES_DB", "realtime_todo");
 
 export const REDIS_HOST = required("REDIS_HOST", "127.0.0.1");
 export const REDIS_PORT = Number(process.env.REDIS_PORT ?? 6379);
+export const REDIS_URL =
+  process.env.REDIS_URL ?? `redis://${REDIS_HOST}:${REDIS_PORT}`;
 
 export const JWT_SECRET = required("JWT_SECRET", "dev-secret-change-me");
 export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? "7d";

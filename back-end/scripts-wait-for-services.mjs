@@ -1,5 +1,11 @@
 import net from 'node:net';
+import 'dotenv/config';
 import logger from "./src/utils/logger.js";
+
+const redisUrl = new URL(
+  process.env.REDIS_URL ||
+    `redis://${process.env.REDIS_HOST || '127.0.0.1'}:${process.env.REDIS_PORT || 6379}`,
+);
 
 const services = [
   {
@@ -9,8 +15,8 @@ const services = [
   },
   {
     name: 'Redis',
-    host: process.env.REDIS_HOST || '127.0.0.1',
-    port: Number(process.env.REDIS_PORT || 6379),
+    host: redisUrl.hostname,
+    port: Number(redisUrl.port || 6379),
   },
 ];
 
