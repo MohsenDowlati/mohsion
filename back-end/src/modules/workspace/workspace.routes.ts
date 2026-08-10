@@ -1,12 +1,10 @@
 import { Router } from "express";
 import { authMiddleware } from "../../middleware/auth.middleware.js";
-import { createWorkspace, getMyWorkspaces, addMember } from "./workspace.controller.js";
-
-
+import { createWorkspace, getMyWorkspaces, getWorkspace, createInvite, redeemInvite } from "./workspace.controller.js";
 export const workspaceRoutes = Router();
 workspaceRoutes.use(authMiddleware);
-
 workspaceRoutes.get("/", getMyWorkspaces);
 workspaceRoutes.post("/", createWorkspace);
-// TODO: remove members
-workspaceRoutes.post("/membership", addMember);
+workspaceRoutes.post("/invites/:token/redeem", redeemInvite);
+workspaceRoutes.get("/:workspaceId", getWorkspace);
+workspaceRoutes.post("/:workspaceId/invites", createInvite);

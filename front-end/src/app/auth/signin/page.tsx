@@ -32,7 +32,8 @@ export default function SignInPage() {
       dispatch(setToken(data.token))
       setLocalStorage(STORAGE_KEYS.TOKEN, data.token)
       dispatch(addToast({ message: "Welcome back!", type: "success" }))
-      router.push("/workspace")
+      const returnTo = new URLSearchParams(window.location.search).get("returnTo")
+      router.push(returnTo?.startsWith("/") ? returnTo : "/workspace")
     } catch (submitError) {
       const msg = submitError instanceof Error ? submitError.message : "Unable to sign in"
       setError(msg)

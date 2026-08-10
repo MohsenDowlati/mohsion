@@ -109,7 +109,7 @@ export function registerListHandlers(socket: Socket) {
 
                 await assertListBelongsToWorkspaceForUser(workspaceId, listId, userId);
 
-                const list = await updateWorkspaceList(listId, title, position);
+                const list = await updateWorkspaceList(listId, title, position, userId);
 
                 getIo().to(workspaceRoom(workspaceId)).emit("list:updated", {
                     workspaceId,
@@ -137,7 +137,7 @@ export function registerListHandlers(socket: Socket) {
 
                 await assertListBelongsToWorkspaceForUser(workspaceId, listId, userId);
 
-                await removeWorkspaceList(listId);
+                await removeWorkspaceList(listId, userId);
 
                 getIo().to(workspaceRoom(workspaceId)).emit("list:deleted", {
                     workspaceId,

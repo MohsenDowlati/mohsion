@@ -6,6 +6,8 @@ import { useDispatch, useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { logout } from "@/features/auth/authSlice"
 import { addToast } from "@/features/toasts/toastSlice"
+import { STORAGE_KEYS } from "@/utils/constants"
+import { socketClient } from "@/services/websocket/socketClient"
 
 type Props = {
   onMenuClick: () => void
@@ -20,6 +22,9 @@ export default function Navbar({ onMenuClick }: Props) {
 
   const handleLogout = () => {
     dispatch(logout())
+    localStorage.removeItem(STORAGE_KEYS.TOKEN)
+    localStorage.removeItem("auth")
+    socketClient.disconnect()
     dispatch(addToast({ message: "Signed out successfully", type: "info" }))
     router.push("/auth/signin")
   }

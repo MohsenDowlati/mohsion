@@ -2,54 +2,11 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as listService from "./list.service.js";
-
-const listSchema = z.object({
-  title: z.string().min(1),
-  position: z.number().int().nonnegative().default(0),
-});
-
-const updateListSchema = z.object({
-    title: z.string().min(1).optional(),
-    position: z.number().int().nonnegative().optional(),
-});
-
-export const getWorkspaceLists = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.id;
-    const { workspaceId } = req.params;
-
-    if (typeof workspaceId !== "string") {
-        throw new Error("invalid ID");
-    }
-    const data = await listService.getWorkspaceLists(workspaceId, userId);
-    res.json(data);
-});
-    
-export const createWorkspaceList = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.id;
-    const { workspaceId } = req.params;
-    const body = listSchema.parse(req.body);
-
-    if (typeof workspaceId !== "string") {
-        throw new Error("invalid ID");
-    }
-
-    const data = await listService.createWorkspaceList(workspaceId, body.title, body.position, userId);
-    res.status(201).json(data);
-});
-    
-export const updateWorkspaceList = asyncHandler(async (req: Request, res: Response) => {
-    const body = updateListSchema.parse(req.body);
-    if (typeof req.params.listId !== "string") {
-        throw new Error("invalid ID");
-    }
-    const data = await listService.updateWorkspaceList(req.params.listId, body.title, body.position);
-    res.json(data);
-});
-    
-export const deleteWorkspaceList = asyncHandler(async (req: Request, res: Response) => {
-    if (typeof req.params.listId !== "string") {
-        throw new Error("invalid ID");
-    }
-    const data = await listService.removeWorkspaceList(req.params.listId);
-    res.json(data);
-});
+import { getIo } from "../../socket/io.js";
+const listSchema = z.object({ title: z.string().trim().min(1), position: z.number().int().nonnegative().default(0) });
+const updateListSchema = listSchema.partial();
+const room = (workspaceId: string) => `workspace:${workspaceId}`;
+export const getWorkspaceLists = asyncHandler(async (req: Request, res: Response) => { const id = z.string().uuid().parse(req.params.workspaceId); res.json(await listService.getWorkspaceLists(id, req.user!.id)); });
+export const createWorkspaceList = asyncHandler(async (req: Request, res: Response) => { const id = z.string().uuid().parse(req.params.workspaceId); const body = listSchema.parse(req.body); const list = await listService.createWorkspaceList(id, body.title, body.position, req.user!.id); getIo().to(room(id)).emit("list:created", { workspaceId: id, list }); res.status(201).json(list); });
+export const updateWorkspaceList = asyncHandler(async (req: Request, res: Response) => { const id = z.string().uuid().parse(req.params.listId); const body = updateListSchema.parse(req.body); const info = await listService.getListWorkspace(id); const list = await listService.updateWorkspaceList(id, body.title, body.position, req.user!.id); getIo().to(room(info.workspace_id)).emit("list:updated", { workspaceId: info.workspace_id, list }); res.json(list); });
+export const deleteWorkspaceList = asyncHandler(async (req: Request, res: Response) => { const id = z.string().uuid().parse(req.params.listId); const info = await listService.getListWorkspace(id); await listService.removeWorkspaceList(id, req.user!.id); getIo().to(room(info.workspace_id)).emit("list:deleted", { workspaceId: info.workspace_id, listId: id }); res.status(204).end(); });

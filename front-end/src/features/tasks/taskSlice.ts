@@ -55,8 +55,13 @@ const taskSlice = createSlice({
     // create
     addTask: (state, action: PayloadAction<Task>) => {
       const task = action.payload
+      for (const listId in state.tasks) {
+        const index = state.tasks[listId].findIndex((item) => item.id === task.id)
+        if (index !== -1) state.tasks[listId].splice(index, 1)
+      }
       state.tasks[task.list_id] ??= []
       state.tasks[task.list_id].push(task)
+      state.tasks[task.list_id].sort((a, b) => a.position - b.position)
     },
 
     // update title/description/completed
@@ -77,6 +82,7 @@ const taskSlice = createSlice({
       // Step 2: if list_id didn't change → simple update
       if (updatedTask.list_id === oldTask.list_id) {
         state.tasks[listId][index] = updatedTask
+        state.tasks[listId].sort((a, b) => a.position - b.position)
         return
       }
 

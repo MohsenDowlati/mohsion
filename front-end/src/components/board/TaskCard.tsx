@@ -12,7 +12,7 @@ import Button from "../ui/Button"
 import Dropdown from "../ui/DropDown"
 import { TaskPriority } from "@/types/task"
 
-export default function TaskCard({ task }: { task: Task }) {
+export default function TaskCard({ task, canEdit }: { task: Task; canEdit: boolean }) {
   const dispatch = useDispatch()
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -83,6 +83,7 @@ export default function TaskCard({ task }: { task: Task }) {
           <div className="flex items-start gap-2 flex-1 min-w-0">
             <button
               onClick={toggleComplete}
+              disabled={!canEdit}
               className={`mt-0.5 w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center shrink-0 ${
                 task.completed
                   ? "bg-blue-600 border-blue-600"
@@ -118,7 +119,7 @@ export default function TaskCard({ task }: { task: Task }) {
         </div>
 
         {/* Action buttons - revealed on hover */}
-        <div className="flex gap-2 mt-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
+        {canEdit && <div className="flex gap-2 mt-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
           <button
             onClick={() => {
               setEditTitle(task.title)
@@ -137,7 +138,7 @@ export default function TaskCard({ task }: { task: Task }) {
           >
             Delete
           </button>
-        </div>
+        </div>}
       </div>
 
       {/* Edit Modal */}
@@ -157,9 +158,7 @@ export default function TaskCard({ task }: { task: Task }) {
           />
           <div className="flex flex-col gap-1">
             <label className="text-sm text-slate-300">Priority</label>
-            <Dropdown
-              onSelect={(val) => setEditPriority(val)}
-            />
+            <Dropdown value={editPriority} onSelect={(val) => setEditPriority(val)} />
           </div>
           <div className="flex gap-3 pt-2">
             <Button

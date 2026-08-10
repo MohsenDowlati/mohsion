@@ -14,6 +14,10 @@ export default function Dropdown({ onSelect, value = "low" }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    setSelected(value)
+  }, [value])
+
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false)

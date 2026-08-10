@@ -179,7 +179,7 @@ export function registerTaskHandlers(socket: Socket) {
             await assertListInWorkspaceForUser(workspaceId, data.list_id, userId);
           }
 
-          const task = await updateListTask(taskId, data);
+          const task = await updateListTask(taskId, data, userId);
 
           await appendOperation(taskId, { type: "update", taskId, data }, userId);
 
@@ -223,7 +223,7 @@ export function registerTaskHandlers(socket: Socket) {
           const task = await updateListTask(taskId, {
             list_id,
             position,
-          });
+          }, userId);
 
           await appendOperation(
               taskId,
@@ -257,9 +257,7 @@ export function registerTaskHandlers(socket: Socket) {
 
           await assertTaskInWorkspaceForUser(workspaceId, taskId, userId);
 
-          await removeTask(taskId);
-
-          await appendOperation(taskId, { type: "delete", taskId }, userId);
+          await removeTask(taskId, userId);
 
           getIo().to(workspaceRoom(workspaceId)).emit("task:deleted", {
             workspaceId,

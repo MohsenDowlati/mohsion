@@ -14,7 +14,7 @@ export default function InvitePage() {
   const { token } = useParams<{ token: string }>()
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const { user, authenticated, requireAuth } = useAuth()
+  const { token: authToken, initialized } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,18 +22,19 @@ export default function InvitePage() {
 
 
 useEffect(() => {
-  if (!authenticated) {
-    requireAuth()
+  if (!initialized) return
+  if (!authToken) {
+    router.replace(`/auth/signin?returnTo=${encodeURIComponent(`/invite/${token}`)}`)
     return
   }
 
-  if (!token || !user) return
+  if (!token) return
 
   const handleRedeem = async () => {
     try {
       setLoading(true)
 
-      const ws = await workspaceApi.redeemInvite(token, user.id)
+      const ws = await workspaceApi.redeemInvite(token)
 
       dispatch(addWorkspace(ws))
 
@@ -52,7 +53,7 @@ useEffect(() => {
 
   handleRedeem()
 
-}, [token, user, authenticated, requireAuth, dispatch, router])
+}, [token, authToken, initialized, dispatch, router])
 
   if (loading) {
     return (

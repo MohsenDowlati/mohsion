@@ -2,71 +2,13 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as todoService from "./todo.service.js";
-
-const taskSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().optional().nullable(),
-  position: z.number().int().nonnegative().default(0),
-  priority: z.string().min(1),
-});
-
-const updateTaskSchema = z.object({
-  list_id: z.string().uuid().optional(),
-  title: z.string().min(1).optional(),
-  description: z.string().optional().nullable(),
-  position: z.number().int().nonnegative().optional(),
-  completed: z.boolean().optional(),
-  priority: z.string().min(1).optional(),
-});
-
-export const getListTasks = asyncHandler(async (req: Request, res: Response) => {
-  const userId = req.user!.id;
-  if (typeof req.params.listId !== "string") {
-      throw new Error("invalid ID");
-  }
-  const data = await todoService.getListTasks(req.params.listId, userId);
-  res.json(data);
-});
-
-export const getWorkspaceTasks = asyncHandler(async (req: Request, res: Response) => {
-  const userId = req.user!.id;
-  if (typeof req.params.workspaceId !== "string") {
-      throw new Error("invalid ID");
-  }
-  const data = await todoService.getWorkspaceTasks(req.params.workspaceId, userId);
-  res.json(data);
-});
-
-export const createTask = asyncHandler(async (req: Request, res: Response) => {
-  const userId = req.user!.id;
-  const body = taskSchema.parse(req.body);
-  if (typeof req.params.listId !== "string") {
-      throw new Error("invalid ID");
-  }
-  const data = await todoService.createListTask(
-    req.params.listId,
-    body.title,
-    body.description ?? null,
-    body.position,
-    body.priority,
-    userId
-  );
-  res.status(201).json(data);
-});
-
-export const updateTask = asyncHandler(async (req: Request, res: Response) => {
-  const body = updateTaskSchema.parse(req.body);
-  if (typeof req.params.taskId !== "string") {
-      throw new Error("invalid ID");
-  }
-  const data = await todoService.updateListTask(req.params.taskId, body);
-  res.json(data);
-});
-
-export const deleteTask = asyncHandler(async (req: Request, res: Response) => {
-  if (typeof req.params.taskId !== "string") {
-      throw new Error("invalid ID");
-  }
-  const data = await todoService.removeTask(req.params.taskId);
-  res.json(data);
-});
+import { getListWithWorkspace } from "../../db/repositories/list.repository.js";
+import { getIo } from "../../socket/io.js";
+const taskSchema = z.object({ title: z.string().trim().min(1), description: z.string().optional().nullable(), position: z.number().int().nonnegative().default(0), priority: z.enum(["low", "medium", "high"]) });
+const updateTaskSchema = z.object({ list_id: z.string().uuid().optional(), title: z.string().trim().min(1).optional(), description: z.string().optional().nullable(), position: z.number().int().nonnegative().optional(), completed: z.boolean().optional(), priority: z.enum(["low", "medium", "high"]).optional() });
+const room = (workspaceId: string) => `workspace:${workspaceId}`;
+export const getListTasks = asyncHandler(async (req: Request, res: Response) => res.json(await todoService.getListTasks(z.string().uuid().parse(req.params.listId), req.user!.id)));
+export const getWorkspaceTasks = asyncHandler(async (req: Request, res: Response) => res.json(await todoService.getWorkspaceTasks(z.string().uuid().parse(req.params.workspaceId), req.user!.id)));
+export const createTask = asyncHandler(async (req: Request, res: Response) => { const id = z.string().uuid().parse(req.params.listId); const body = taskSchema.parse(req.body); const list = await getListWithWorkspace(id); if (!list) throw new Error("List not found"); const task = await todoService.createListTask(id, body.title, body.description ?? null, body.position, body.priority, req.user!.id); getIo().to(room(list.workspace_id)).emit("task:created", { workspaceId: list.workspace_id, task }); res.status(201).json(task); });
+export const updateTask = asyncHandler(async (req: Request, res: Response) => { const id = z.string().uuid().parse(req.params.taskId); const body = updateTaskSchema.parse(req.body); const info = await todoService.getTaskWorkspace(id); const task = await todoService.updateListTask(id, body, req.user!.id); getIo().to(room(info.workspace_id)).emit("task:updated", { workspaceId: info.workspace_id, task }); res.json(task); });
+export const deleteTask = asyncHandler(async (req: Request, res: Response) => { const id = z.string().uuid().parse(req.params.taskId); const info = await todoService.getTaskWorkspace(id); await todoService.removeTask(id, req.user!.id); getIo().to(room(info.workspace_id)).emit("task:deleted", { workspaceId: info.workspace_id, taskId: id }); res.status(204).end(); });

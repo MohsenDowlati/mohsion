@@ -25,6 +25,10 @@ import { setWorkspaceTasks, reorderTasks, moveTask } from "@/features/tasks/task
 import { addToast } from "@/features/toasts/toastSlice"
 import taskApiInstance from "@/services/api/taskApi"
 import type { Task } from "@/types/task"
+import type { Workspace } from "@/types/workspace"
+import { workspaceApi } from "@/services/api/workspaceApi"
+import { useWebSocket } from "@/hooks/useWebSocket"
+import useAuth from "@/hooks/useAuth"
 
 export default function WorkspaceBoard({ id }: { id: string }) {
   const router = useRouter()
@@ -33,6 +37,9 @@ export default function WorkspaceBoard({ id }: { id: string }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [dataLoaded, setDataLoaded] = useState(false)
+  const [workspace, setWorkspace] = useState<Workspace | null>(null)
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [inviteLink, setInviteLink] = useState("")
 
   const [openModal, setOpenModal] = useState(false)
   const [title, setTitle] = useState("")
@@ -40,6 +47,9 @@ export default function WorkspaceBoard({ id }: { id: string }) {
   const [activeTask, setActiveTask] = useState<Task | null>(null)
 
   const dispatch = useDispatch()
+  const { token } = useAuth()
+  const canEdit = workspace?.my_role === "owner" || workspace?.my_role === "editor"
+  useWebSocket(id, token)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -72,11 +82,13 @@ export default function WorkspaceBoard({ id }: { id: string }) {
 
     const fetchData = async () => {
       try {
-        const [listData, taskData] = await Promise.all([
+        const [listData, taskData, workspaceData] = await Promise.all([
           listApi.getLists(id),
           taskApi.getWorkspaceTasks(id, controller.signal),
+          workspaceApi.getWorkspace(id),
         ])
 
+        setWorkspace(workspaceData)
         dispatch(setLists(listData))
         dispatch(
           setWorkspaceTasks({
@@ -101,7 +113,20 @@ export default function WorkspaceBoard({ id }: { id: string }) {
     return () => controller.abort()
   }, [dispatch, id])
 
+  const createInvite = async () => {
+    try {
+      const invite = await workspaceApi.createInvite(id, "editor")
+      const link = `${window.location.origin}/invite/${invite.token}`
+      setInviteLink(link)
+      await navigator.clipboard?.writeText(link)
+      dispatch(addToast({ message: "Editor invitation link copied", type: "success" }))
+    } catch (inviteError) {
+      dispatch(addToast({ message: inviteError instanceof Error ? inviteError.message : "Unable to create invite", type: "error" }))
+    }
+  }
+
   const handleDragStart = (event: DragStartEvent) => {
+    if (!canEdit) return
     const taskId = event.active.id as string
     for (const listId in allTasks) {
       const found = allTasks[listId].find((t) => t.id === taskId)
@@ -116,7 +141,7 @@ export default function WorkspaceBoard({ id }: { id: string }) {
     const { active, over } = event
     setActiveTask(null)
 
-    if (!over) return
+    if (!over || !canEdit) return
 
     const activeId = active.id as string
     const overId = over.id as string
@@ -132,7 +157,21 @@ export default function WorkspaceBoard({ id }: { id: string }) {
       const toListId = overData.listId as string
 
       if (fromListId === toListId) {
+        const currentTasks = allTasks[fromListId] || []
+        const fromIndex = currentTasks.findIndex((task) => task.id === activeId)
+        const toIndex = currentTasks.findIndex((task) => task.id === overId)
+        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return
+        const reordered = [...currentTasks]
+        const [moved] = reordered.splice(fromIndex, 1)
+        reordered.splice(toIndex, 0, moved)
         dispatch(reorderTasks({ listId: fromListId, activeId, overId }))
+        try {
+          await Promise.all(reordered.map((task, position) =>
+            task.position === position ? Promise.resolve(task) : taskApiInstance.updateTask(task.id, { position })
+          ))
+        } catch {
+          dispatch(addToast({ message: "Failed to reorder tasks", type: "error" }))
+        }
       } else {
         const targetTasks = allTasks[toListId] || []
         const overIndex = targetTasks.findIndex((t) => t.id === overId)
@@ -192,7 +231,9 @@ export default function WorkspaceBoard({ id }: { id: string }) {
           >
             ‹ Back
           </button>
-          <h1 className="text-lg sm:text-xl font-semibold text-slate-200">Board</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-slate-200">{workspace?.name ?? "Board"}</h1>
+          {workspace && <span className="text-xs text-slate-500 capitalize">{workspace.my_role}</span>}
+          {workspace?.my_role === "owner" && <button onClick={() => setInviteOpen(true)} className="ml-auto px-3 py-2 text-sm rounded-lg border border-blue-500/30 text-blue-400 hover:bg-slate-800">Invite people</button>}
         </div>
 
         {!dataLoaded ? (
@@ -214,7 +255,7 @@ export default function WorkspaceBoard({ id }: { id: string }) {
           <div className="flex gap-3 sm:gap-4 overflow-x-auto p-4 sm:p-6 flex-1 stagger">
             {lists.map((list, i) => (
               <div key={list.id} style={{ "--i": i } as React.CSSProperties}>
-                <ListColumn id={list.id} title={list.title} />
+                <ListColumn id={list.id} title={list.title} canEdit={canEdit} />
               </div>
             ))}
 
@@ -229,7 +270,7 @@ export default function WorkspaceBoard({ id }: { id: string }) {
         )}
 
         {/* Floating add button */}
-        <button
+        {canEdit && <button
           className="w-12 h-12 sm:w-14 sm:h-14 text-3xl sm:text-4xl rounded-full fixed right-4 bottom-4 sm:right-6 sm:bottom-6 bg-blue-600 border border-blue-400 text-white hover:bg-blue-500 hover:shadow-[0_0_24px_rgba(59,130,246,0.6)] transition-all duration-200 active:scale-90 flex items-center justify-center leading-none shadow-[0_0_16px_rgba(59,130,246,0.4)] animate-pulse-glow z-30"
           onClick={() => {
             setOpenModal(true)
@@ -238,7 +279,7 @@ export default function WorkspaceBoard({ id }: { id: string }) {
           aria-label="Add new list"
         >
           +
-        </button>
+        </button>}
       </div>
 
       <DragOverlay>
@@ -248,6 +289,14 @@ export default function WorkspaceBoard({ id }: { id: string }) {
           </div>
         ) : null}
       </DragOverlay>
+
+      <Modal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Invite to Workspace">
+        <div className="space-y-4">
+          <p className="text-sm text-slate-400">Create an editor link that expires in 7 days.</p>
+          {inviteLink && <Input label="Invitation link" value={inviteLink} readOnly />}
+          <Button onClick={createInvite} className="w-full">{inviteLink ? "Copy New Link" : "Create & Copy Link"}</Button>
+        </div>
+      </Modal>
 
       <Modal open={openModal} onClose={() => setOpenModal(false)} title="New List">
         <form onSubmit={handleSubmit} className="space-y-4">

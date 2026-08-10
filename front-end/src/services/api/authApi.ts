@@ -32,6 +32,15 @@ async function requestAuth(
 }
 
 const authApi = {
+  async me(token: string) {
+    const response = await fetch(`${API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await response.json().catch(() => null)
+    if (!response.ok) throw new Error("Session expired")
+    return data as import("@/types/auth").User
+  },
+
   signUp(name: string, password: string) {
     return requestAuth("register", { name, password })
   },

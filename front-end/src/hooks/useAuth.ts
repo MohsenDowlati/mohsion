@@ -6,6 +6,8 @@ import { RootState } from "@/store"
 import { setUser, setToken, logout} from "@/features/auth/authSlice"
 import authApi from "@/services/api/authApi"
 import { useRouter } from "next/navigation"
+import { STORAGE_KEYS } from "@/utils/constants"
+import { getLocalStorage } from "@/utils/helper"
 
 export default function useAuth() {
   const dispatch = useDispatch()
@@ -13,21 +15,38 @@ export default function useAuth() {
 
   const { user, token } = useSelector((state: RootState) => state.auth)
   const [loading, setLoading] = useState(false)
+  const [initialized, setInitialized] = useState(false)
 
   // Restore session on first mount
   useEffect(() => {
-    const saved = localStorage.getItem("auth")
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (parsed.user && parsed.token) {
-          dispatch(setUser(parsed.user))
-          dispatch(setToken(parsed.token))
+    const restore = async () => {
+      const saved = localStorage.getItem("auth")
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          if (parsed.user && parsed.token) {
+            dispatch(setUser(parsed.user))
+            dispatch(setToken(parsed.token))
+            return
+          }
+        } catch {
+          localStorage.removeItem("auth")
+    localStorage.removeItem(STORAGE_KEYS.TOKEN)
         }
+      }
+
+      const savedToken = getLocalStorage<string | null>(STORAGE_KEYS.TOKEN, null)
+      if (!savedToken) return
+      try {
+        const savedUser = await authApi.me(savedToken)
+        dispatch(setUser(savedUser))
+        dispatch(setToken(savedToken))
       } catch {
-        localStorage.removeItem("auth")
+        localStorage.removeItem(STORAGE_KEYS.TOKEN)
       }
     }
+
+    void restore().finally(() => setInitialized(true))
   }, [dispatch])
 
   // Sync Redux → localStorage
@@ -100,6 +119,7 @@ export default function useAuth() {
     user,
     token,
     loading,
+    initialized,
     authenticated: Boolean(token),
     signIn,
     signUp,

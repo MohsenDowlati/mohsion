@@ -30,7 +30,9 @@ export const listSlice = createSlice({
 
     // Create new list
     addList: (state, action: PayloadAction<List>) => {
-      state.lists.push(action.payload)
+      const index = state.lists.findIndex((list) => list.id === action.payload.id)
+      if (index === -1) state.lists.push(action.payload)
+      else state.lists[index] = action.payload
       state.lists.sort((a, b) => a.position - b.position)
     },
 
