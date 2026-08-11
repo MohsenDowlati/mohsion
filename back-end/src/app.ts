@@ -1,6 +1,7 @@
 import express from "express";
 // import swaggerUi from "swagger-ui-express";
 // import swaggerJSDoc from "swagger-jsdoc";
+import { apiRateLimit } from "./middleware/apiRateLimit.middleware.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import {workspaceRoutes} from "./modules/workspace/workspace.routes.js";
 import {listRoutes} from "./modules/list/list.routes.js";
@@ -10,6 +11,7 @@ import { errorHandler } from "./middleware/error.middleware.js";
 import cors from "cors";
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cors({
   origin: "http://localhost:5000",
@@ -30,6 +32,7 @@ app.use(cors({
 // });
 
 // app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api",apiRateLimit);
 app.use("/api/auth", authRoutes);
 app.use("/api/todo", taskRoutes);
 app.use("/api/workspace", workspaceRoutes);
