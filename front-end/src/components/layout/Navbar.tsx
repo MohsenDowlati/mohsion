@@ -8,6 +8,10 @@ import { logout } from "@/features/auth/authSlice"
 import { addToast } from "@/features/toasts/toastSlice"
 import { STORAGE_KEYS } from "@/utils/constants"
 import { socketClient } from "@/services/websocket/socketClient"
+import { frontendCache } from "@/cache/storage"
+import { clearWorkspaces } from "@/features/workspaces/workspaceSlice"
+import { clearLists } from "@/features/lists/listSlice"
+import { clearTasks } from "@/features/tasks/taskSlice"
 
 type Props = {
   onMenuClick: () => void
@@ -21,7 +25,11 @@ export default function Navbar({ onMenuClick }: Props) {
   const user = useSelector((state: RootState) => state.auth.user)
 
   const handleLogout = () => {
+    if (user) frontendCache.clearUser(user.id)
     dispatch(logout())
+    dispatch(clearWorkspaces())
+    dispatch(clearLists())
+    dispatch(clearTasks())
     localStorage.removeItem(STORAGE_KEYS.TOKEN)
     localStorage.removeItem("auth")
     socketClient.disconnect()

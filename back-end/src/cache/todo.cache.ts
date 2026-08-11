@@ -1,23 +1,11 @@
-import redis from "../config/redis.js";
-import { TODO_LIST } from "./keys.js";
+import { clearCached, getCached, setCached } from "./data.cache.js";
+import { listTaskCacheKey, workspaceTaskCacheKey } from "./keys.js";
 
-export const getTodosCache = async (userId: string) => {
-  const data = await redis.get(TODO_LIST(userId));
-  return data ? JSON.parse(data) : null;
-};
-
-export const setTodosCache = async (
-  userId: string,
-  todos: unknown
-) => {
-  await redis.set(
-    TODO_LIST(userId),
-    JSON.stringify(todos),
-    "EX",
-    60
-  );
-};
-
-export const clearTodosCache = async (userId: string) => {
-  await redis.del(TODO_LIST(userId));
-};
+export const getListTasksCache = <T>(listId: string) => getCached<T>(listTaskCacheKey(listId));
+export const setListTasksCache = (listId: string, tasks: unknown) => setCached(listTaskCacheKey(listId), tasks);
+export const getWorkspaceTasksCache = <T>(workspaceId: string) => getCached<T>(workspaceTaskCacheKey(workspaceId));
+export const setWorkspaceTasksCache = (workspaceId: string, tasks: unknown) => setCached(workspaceTaskCacheKey(workspaceId), tasks);
+export const clearTaskCaches = (workspaceId: string, ...listIds: Array<string | undefined>) => clearCached(
+  workspaceTaskCacheKey(workspaceId),
+  ...[...new Set(listIds.filter((id): id is string => Boolean(id)))].map(listTaskCacheKey),
+);

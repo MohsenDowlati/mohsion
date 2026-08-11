@@ -8,6 +8,11 @@ import authApi from "@/services/api/authApi"
 import { useRouter } from "next/navigation"
 import { STORAGE_KEYS } from "@/utils/constants"
 import { getLocalStorage } from "@/utils/helper"
+import { frontendCache } from "@/cache/storage"
+import { socketClient } from "@/services/websocket/socketClient"
+import { clearWorkspaces } from "@/features/workspaces/workspaceSlice"
+import { clearLists } from "@/features/lists/listSlice"
+import { clearTasks } from "@/features/tasks/taskSlice"
 
 export default function useAuth() {
   const dispatch = useDispatch()
@@ -101,10 +106,16 @@ export default function useAuth() {
 
   // Logout
   const signOut = useCallback(() => {
+    if (user) frontendCache.clearUser(user.id)
+    socketClient.disconnect()
     dispatch(logout())
+    dispatch(clearWorkspaces())
+    dispatch(clearLists())
+    dispatch(clearTasks())
     localStorage.removeItem("auth")
+    localStorage.removeItem(STORAGE_KEYS.TOKEN)
     router.push("/auth/signin")
-  }, [dispatch, router])
+  }, [dispatch, router, user])
 
   // Redirect helpers
   const requireAuth = useCallback(() => {

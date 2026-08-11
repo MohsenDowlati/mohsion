@@ -3,7 +3,7 @@ import { useEffect } from "react"
 import { useDispatch } from "react-redux"
 import { socketClient } from "@/services/websocket/socketClient"
 import { addList, removeList, updateList } from "@/features/lists/listSlice"
-import { addTask, removeTask, updateTask } from "@/features/tasks/taskSlice"
+import { addTask, removeTask, removeTasksForList, updateTask } from "@/features/tasks/taskSlice"
 import type { List } from "@/features/lists/listSlice"
 import type { Task } from "@/features/tasks/taskSlice"
 export function useWebSocket(workspaceId: string, token: string | null) {
@@ -14,7 +14,7 @@ export function useWebSocket(workspaceId: string, token: string | null) {
     const join = () => socket.emit("workspace:join", { workspaceId })
     const onListCreated = (e:{workspaceId:string;list:List}) => { if(e.workspaceId===workspaceId) dispatch(addList(e.list)) }
     const onListUpdated = (e:{workspaceId:string;list:List}) => { if(e.workspaceId===workspaceId) dispatch(updateList({id:e.list.id,data:e.list})) }
-    const onListDeleted = (e:{workspaceId:string;listId:string}) => { if(e.workspaceId===workspaceId) dispatch(removeList(e.listId)) }
+    const onListDeleted = (e:{workspaceId:string;listId:string}) => { if(e.workspaceId===workspaceId) dispatch(removeList(e.listId)); dispatch(removeTasksForList(e.listId)) }
     const onTaskCreated = (e:{workspaceId:string;task:Task}) => { if(e.workspaceId===workspaceId) dispatch(addTask(e.task)) }
     const onTaskUpdated = (e:{workspaceId:string;task:Task}) => { if(e.workspaceId===workspaceId) dispatch(updateTask({id:e.task.id,data:e.task})) }
     const onTaskDeleted = (e:{workspaceId:string;taskId:string}) => { if(e.workspaceId===workspaceId) dispatch(removeTask(e.taskId)) }

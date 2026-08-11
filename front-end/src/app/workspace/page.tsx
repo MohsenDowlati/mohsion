@@ -10,10 +10,13 @@ import Button from "@/components/ui/Button"
 import { workspaceApi } from "@/services/api/workspaceApi"
 import { addToast } from "@/features/toasts/toastSlice"
 import Logo from "@/components/ui/Logo"
+import useAuth from "@/hooks/useAuth"
+import { frontendCache } from "@/cache/storage"
 
 export default function WorkspacePage() {
   const router = useRouter()
   const dispatch = useDispatch()
+  const { user, token, initialized } = useAuth()
 
   const workspaces = useSelector((state: RootState) => state.workspaces.workspaces)
 
@@ -23,10 +26,15 @@ export default function WorkspacePage() {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
+    if (!initialized || !token || !user) return
+    const cached = frontendCache.readWorkspaces(user.id)
+    if (cached) { dispatch(setWorkspaces(cached)); setLoaded(true) }
+
     const fetchData = async () => {
       try {
         const data = await workspaceApi.getWorkspaces()
         dispatch(setWorkspaces(data))
+        frontendCache.writeWorkspaces(user.id, data)
       } catch (submitError) {
         setError(
           submitError instanceof Error
@@ -39,7 +47,7 @@ export default function WorkspacePage() {
     }
 
     fetchData()
-  }, [dispatch])
+  }, [dispatch, initialized, token, user])
 
   function formatDate(iso: string) {
     return new Date(iso).toLocaleString("en-US", {
@@ -62,6 +70,7 @@ export default function WorkspacePage() {
     try {
       const data = await workspaceApi.createWorkspace({ name })
       dispatch(addWorkspace(data))
+      if (user) frontendCache.writeWorkspaces(user.id, [...workspaces, data])
       dispatch(addToast({ message: "Workspace created", type: "success" }))
       setName("")
     } catch (submitError) {

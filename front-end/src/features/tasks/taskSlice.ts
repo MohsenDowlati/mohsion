@@ -14,11 +14,13 @@ export type Task = {
 }
 
 type TaskState = {
+  workspaceId: string | null
   tasks: Record<string,Task[]>
   loading: boolean
 }
 
 const initialState: TaskState = {
+  workspaceId: null,
   tasks: {},
   loading: false
 }
@@ -38,10 +40,12 @@ const taskSlice = createSlice({
 
     setWorkspaceTasks: (
       state,
-      action: PayloadAction<{ listIds: string[]; tasks: Task[] }>
+      action: PayloadAction<{ workspaceId: string; listIds: string[]; tasks: Task[] }>
     ) => {
-      const { listIds, tasks } = action.payload
+      const { workspaceId, listIds, tasks } = action.payload
 
+      state.workspaceId = workspaceId
+      state.tasks = {}
       for (const listId of listIds) {
         state.tasks[listId] = []
       }
@@ -199,8 +203,13 @@ const taskSlice = createSlice({
   }
     },
 
+    removeTasksForList: (state, action: PayloadAction<string>) => {
+      delete state.tasks[action.payload]
+    },
+
     // clear on logout
     clearTasks: (state) => {
+      state.workspaceId = null
       state.tasks = {}
     }
   }
@@ -214,6 +223,7 @@ export const {
   removeTask,
   reorderTasks,
   moveTask,
+  removeTasksForList,
   clearTasks
 } = taskSlice.actions
 

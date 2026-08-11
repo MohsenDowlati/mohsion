@@ -29,11 +29,14 @@ import type { Workspace } from "@/types/workspace"
 import { workspaceApi } from "@/services/api/workspaceApi"
 import { useWebSocket } from "@/hooks/useWebSocket"
 import useAuth from "@/hooks/useAuth"
+import { frontendCache } from "@/cache/storage"
 
 export default function WorkspaceBoard({ id }: { id: string }) {
   const router = useRouter()
-  const lists = useSelector((state: RootState) => state.lists.lists)
-  const allTasks = useSelector((state: RootState) => state.tasks.tasks)
+  const listState = useSelector((state: RootState) => state.lists)
+  const taskState = useSelector((state: RootState) => state.tasks)
+  const lists = listState.workspaceId === id ? listState.lists : []
+  const allTasks = taskState.workspaceId === id ? taskState.tasks : {}
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [dataLoaded, setDataLoaded] = useState(false)
@@ -47,7 +50,7 @@ export default function WorkspaceBoard({ id }: { id: string }) {
   const [activeTask, setActiveTask] = useState<Task | null>(null)
 
   const dispatch = useDispatch()
-  const { token } = useAuth()
+  const { token, user, initialized } = useAuth()
   const canEdit = workspace?.my_role === "owner" || workspace?.my_role === "editor"
   useWebSocket(id, token)
 
@@ -78,7 +81,21 @@ export default function WorkspaceBoard({ id }: { id: string }) {
   }
 
   useEffect(() => {
+    if (!initialized || !token || !user) return
+
     const controller = new AbortController()
+    const cached = frontendCache.readWorkspaceBoard(user.id, id)
+
+    if (cached) {
+      setWorkspace(cached.workspace)
+      dispatch(setLists({ workspaceId: id, lists: cached.lists }))
+      dispatch(setWorkspaceTasks({ workspaceId: id, listIds: cached.lists.map((list) => list.id), tasks: cached.tasks }))
+      setDataLoaded(true)
+    } else {
+      dispatch(setLists({ workspaceId: id, lists: [] }))
+      dispatch(setWorkspaceTasks({ workspaceId: id, listIds: [], tasks: [] }))
+      setDataLoaded(false)
+    }
 
     const fetchData = async () => {
       try {
@@ -89,9 +106,10 @@ export default function WorkspaceBoard({ id }: { id: string }) {
         ])
 
         setWorkspace(workspaceData)
-        dispatch(setLists(listData))
+        dispatch(setLists({ workspaceId: id, lists: listData }))
         dispatch(
           setWorkspaceTasks({
+            workspaceId: id,
             listIds: listData.map((list) => list.id),
             tasks: taskData,
           })
@@ -111,7 +129,15 @@ export default function WorkspaceBoard({ id }: { id: string }) {
     fetchData()
 
     return () => controller.abort()
-  }, [dispatch, id])
+  }, [dispatch, id, initialized, token, user])
+
+  useEffect(() => {
+    if (!user || !workspace || !dataLoaded || listState.workspaceId !== id || taskState.workspaceId !== id) return
+    const timeout = window.setTimeout(() => {
+      frontendCache.writeWorkspaceBoard(user.id, id, { workspace, lists: listState.lists, tasks: Object.values(taskState.tasks).flat() })
+    }, 100)
+    return () => window.clearTimeout(timeout)
+  }, [dataLoaded, id, listState, taskState, user, workspace])
 
   const createInvite = async () => {
     try {
@@ -271,7 +297,7 @@ export default function WorkspaceBoard({ id }: { id: string }) {
 
         {/* Floating add button */}
         {canEdit && <button
-          className="w-12 h-12 sm:w-14 sm:h-14 text-3xl sm:text-4xl rounded-full fixed right-4 bottom-4 sm:right-6 sm:bottom-6 bg-blue-600 border border-blue-400 text-white hover:bg-blue-500 hover:shadow-[0_0_24px_rgba(59,130,246,0.6)] transition-all duration-200 active:scale-90 flex items-center justify-center leading-none shadow-[0_0_16px_rgba(59,130,246,0.4)] animate-pulse-glow z-30"
+          className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 text-3xl sm:text-4xl rounded-full fixed right-4 bottom-4 sm:right-6 sm:bottom-6 bg-blue-600 border border-blue-400 text-white hover:bg-blue-500 hover:shadow-[0_0_24px_rgba(59,130,246,0.6)] transition-all duration-200 active:scale-90 leading-none shadow-[0_0_16px_rgba(59,130,246,0.4)] animate-pulse-glow z-30"
           onClick={() => {
             setOpenModal(true)
             setTitle("")

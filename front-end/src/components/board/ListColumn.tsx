@@ -5,7 +5,7 @@ import { useDroppable } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import TaskCard from "./TaskCard"
-import { addTask, type Task } from "@/features/tasks/taskSlice"
+import { addTask, removeTasksForList, type Task } from "@/features/tasks/taskSlice"
 import { removeList, updateList } from "@/features/lists/listSlice"
 import { useState } from "react"
 import taskApi from "@/services/api/taskApi"
@@ -32,7 +32,7 @@ export default function ListColumn({ title, id, canEdit }: Props) {
   const droppable = useDroppable({ id: `list-${id}`, data:{type:"list",listId:id}, disabled:!canEdit })
   const createTask = async () => { if(!taskTitle.trim()) return void dispatch(addToast({message:"Task title cannot be empty",type:"warning"})); setLoading(true); setError(""); try { const data=await taskApi.newTask(id,{title:taskTitle.trim(),description,priority,position:tasks.length}); dispatch(addTask(data)); setOpenModal(false); setTaskTitle(""); setDescription(""); setPriority("low"); dispatch(addToast({message:"Task created",type:"success"})) } catch(e){const m=e instanceof Error?e.message:"Unable to create task";setError(m);dispatch(addToast({message:m,type:"error"}))} finally{setLoading(false)} }
   const saveList = async () => { if(!editTitle.trim()) return; setLoading(true); try { const list=await listApi.updateList(id,{title:editTitle.trim()}); dispatch(updateList({id,data:list})); setEditing(false); dispatch(addToast({message:"List updated",type:"success"})) } catch(e){dispatch(addToast({message:e instanceof Error?e.message:"Failed to update list",type:"error"}))} finally{setLoading(false)} }
-  const deleteList = async () => { setLoading(true); try { await listApi.deleteList(id); dispatch(removeList(id)); setDeleting(false); dispatch(addToast({message:"List deleted",type:"success"})) } catch(e){dispatch(addToast({message:e instanceof Error?e.message:"Failed to delete list",type:"error"}))} finally{setLoading(false)} }
+  const deleteList = async () => { setLoading(true); try { await listApi.deleteList(id); dispatch(removeList(id)); dispatch(removeTasksForList(id)); setDeleting(false); dispatch(addToast({message:"List deleted",type:"success"})) } catch(e){dispatch(addToast({message:e instanceof Error?e.message:"Failed to delete list",type:"error"}))} finally{setLoading(false)} }
   return <>
     <div ref={droppable.setNodeRef} className={`bg-slate-900 rounded-xl p-3 sm:p-4 w-72 sm:w-80 shrink-0 min-h-[200px] border transition-all duration-200 ${droppable.isOver?"border-blue-500 drag-over":"border-slate-700/50"}`}>
       <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 min-w-0"><h3 className="text-blue-400 text-base font-semibold truncate">{title}</h3><span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">{tasks.length}</span></div>

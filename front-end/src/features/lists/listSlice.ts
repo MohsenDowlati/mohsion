@@ -8,11 +8,13 @@ export type List = {
 }
 
 export type ListState = {
+  workspaceId: string | null
   lists: List[]
   loading: boolean
 }
 
 const initialState: ListState = {
+  workspaceId: null,
   lists: [],
   loading: false
 }
@@ -22,8 +24,12 @@ export const listSlice = createSlice({
   initialState,
   reducers: {
     // Load lists for a workspace
-    setLists: (state, action: PayloadAction<List[]>) => {
-      state.lists = action.payload.sort(
+    setLists: (
+      state,
+      action: PayloadAction<{ workspaceId: string; lists: List[] }>
+    ) => {
+      state.workspaceId = action.payload.workspaceId
+      state.lists = [...action.payload.lists].sort(
         (a, b) => a.position - b.position
       )
     },
@@ -79,6 +85,7 @@ export const listSlice = createSlice({
 
     // used on logout
     clearLists: (state) => {
+      state.workspaceId = null
       state.lists = []
     }
   }

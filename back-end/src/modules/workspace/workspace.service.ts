@@ -2,17 +2,22 @@ import jwt from "jsonwebtoken";
 import { getWorkspacesForUser, getWorkspaceForUser, addWorkspaceMember, getWorkspaceMembership, createWorkspace } from "../../db/repositories/workspace.repository.js";
 import { JWT_SECRET } from "../../config/env.js";
 import makeError from "../../utils/makeError.js";
+import { clearUserWorkspaceCaches, getUserWorkspaceCache, getUserWorkspacesCache, setUserWorkspaceCache, setUserWorkspacesCache } from "../../cache/workspace.cache.js";
 
 export type WorkspaceRole = "owner" | "editor" | "viewer";
-export const getMyWorkspaces = (userId: string) => getWorkspacesForUser(userId);
+export const getMyWorkspaces = async (userId: string) => { const cached = await getUserWorkspacesCache<Awaited<ReturnType<typeof getWorkspacesForUser>>>(userId); if (cached) return cached; const workspaces = await getWorkspacesForUser(userId); await setUserWorkspacesCache(userId, workspaces); return workspaces; };
 export const getWorkspace = async (workspaceId: string, userId: string) => {
+  const cached = await getUserWorkspaceCache<Awaited<ReturnType<typeof getWorkspaceForUser>>>(userId, workspaceId);
+  if (cached) return cached;
   const workspace = await getWorkspaceForUser(workspaceId, userId);
   if (!workspace) throw makeError("Workspace not found", 404);
+  await setUserWorkspaceCache(userId, workspaceId, workspace);
   return workspace;
 };
 export const createWorkspaceWithOwner = async (name: string, ownerId: string) => {
   const workspace = await createWorkspace(name, ownerId);
   await addWorkspaceMember(workspace.id, ownerId, "owner");
+  await clearUserWorkspaceCaches(ownerId);
   return { ...workspace, my_role: "owner" as const };
 };
 export const requireWorkspaceMember = async (workspaceId: string, userId: string) => {
@@ -41,5 +46,6 @@ export const redeemWorkspaceInvite = async (token: string, userId: string) => {
   catch { throw makeError("Invalid or expired invite", 400); }
   if (payload.type !== "workspace-invite" || typeof payload.workspaceId !== "string" || (payload.role !== "editor" && payload.role !== "viewer")) throw makeError("Invalid or expired invite", 400);
   await addWorkspaceMember(payload.workspaceId, userId, payload.role);
+  await clearUserWorkspaceCaches(userId, payload.workspaceId);
   return getWorkspace(payload.workspaceId, userId);
 };
