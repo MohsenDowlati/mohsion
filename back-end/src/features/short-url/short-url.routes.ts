@@ -3,6 +3,6 @@ import { redirectShortLink } from "./short-url.controller.js";
 
 const router = Router();
 
-router.get("/s/:code", redirectShortLink);
+router.get("/:code", redirectShortLink);
 
 export default router;

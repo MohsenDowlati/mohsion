@@ -27,14 +27,14 @@ export async function findByCode(code: string) {
     return result.rows[0] ?? null;
 }
 
-export async function incrementClickCount(id: string) {
+export async function incrementClickCount(id: string | number) {
     await query(
     CLICK_COUNT,
         [id],
     );
 }
 
-export async function deactivateShortLink(id: string) {
+export async function deactivateShortLink(id: string | number) {
     const result = await query(
        DEACTIVATE_LINK,
         [id],

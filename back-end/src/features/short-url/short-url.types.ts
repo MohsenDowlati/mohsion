@@ -10,8 +10,10 @@ export interface CreateShortLinkInput {
 }
 
 export interface ShortLink {
-    id: string;
+    id: string | number;
     code: string;
+    type?: ShortLinkType;
+    destinationUrl: string;
     ownerId: string | null;
     invitationId: string | null;
     workspaceId: string | null;

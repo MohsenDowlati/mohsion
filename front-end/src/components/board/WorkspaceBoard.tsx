@@ -141,15 +141,42 @@ export default function WorkspaceBoard({ id }: { id: string }) {
 
   const createInvite = async () => {
     try {
-      const invite = await workspaceApi.createInvite(id, "editor")
-      const link = `${window.location.origin}/invite/${invite.token}`
-      setInviteLink(link)
-      await navigator.clipboard?.writeText(link)
-      dispatch(addToast({ message: "Editor invitation link copied", type: "success" }))
+      const invite = await workspaceApi.createInvite(id, "editor");
+      const link = invite.short_url || `${window.location.origin}/invite/${invite.token}`;
+
+      setInviteLink(link);
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+        dispatch(addToast({ message: "Short invitation link copied!", type: "success" }));
+      } else {
+        window.prompt("Copy this invitation link", link);
+        dispatch(addToast({ message: "Link created. Please copy it manually.", type: "info" }));
+      }
     } catch (inviteError) {
-      dispatch(addToast({ message: inviteError instanceof Error ? inviteError.message : "Unable to create invite", type: "error" }))
+      dispatch(
+          addToast({
+            message: inviteError instanceof Error ? inviteError.message : "Unable to create invite",
+            type: "error",
+          })
+      );
     }
-  }
+  };
+
+  const copyExistingLink = async () => {
+    if (!inviteLink) return;
+    try {
+      if (!navigator.clipboard?.writeText) {
+        window.prompt("Copy this invitation link", inviteLink);
+        return;
+      }
+      await navigator.clipboard.writeText(inviteLink);
+      dispatch(addToast({ message: "Invitation link copied!", type: "success" }));
+    } catch {
+      dispatch(addToast({ message: "Failed to copy link", type: "error" }));
+    }
+  };
+
 
   const handleDragStart = (event: DragStartEvent) => {
     if (!canEdit) return
@@ -318,11 +345,40 @@ export default function WorkspaceBoard({ id }: { id: string }) {
 
       <Modal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Invite to Workspace">
         <div className="space-y-4">
-          <p className="text-sm text-slate-400">Create an editor link that expires in 7 days.</p>
-          {inviteLink && <Input label="Invitation link" value={inviteLink} readOnly />}
-          <Button onClick={createInvite} className="w-full">{inviteLink ? "Copy New Link" : "Create & Copy Link"}</Button>
+          <p className="text-sm text-slate-400">
+            Create an editor link that expires in 7 days.
+          </p>
+
+          {inviteLink && (
+              <div className="space-y-2">
+                <Input
+                    label="Invitation link"
+                    value={inviteLink}
+                    readOnly
+                    onFocus={(e) => e.target.select()} // Auto-selects text on click
+                />
+              </div>
+          )}
+
+          <div className="flex gap-2">
+            {inviteLink ? (
+                <>
+                  <Button onClick={copyExistingLink} className="flex-1">
+                    Copy Link
+                  </Button>
+                  <Button onClick={createInvite} variant="secondary" className="text-xs">
+                    Generate New
+                  </Button>
+                </>
+            ) : (
+                <Button onClick={createInvite} className="w-full">
+                  Create & Copy Link
+                </Button>
+            )}
+          </div>
         </div>
       </Modal>
+
 
       <Modal open={openModal} onClose={() => setOpenModal(false)} title="New List">
         <form onSubmit={handleSubmit} className="space-y-4">

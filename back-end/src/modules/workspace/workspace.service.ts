@@ -46,7 +46,7 @@ export const createWorkspaceWithOwner = async (name: string, ownerId: string) =>
   await addWorkspaceMember(workspace.id, ownerId, "owner");
   await clearUserWorkspaceCaches(ownerId);
 
-  const destinationUrl = `${CLIENT_APP_URL}/workspaces/${workspace.id}`;
+  const destinationUrl = `${CLIENT_APP_URL}/workspace/${workspace.id}`;
 
   const shortLink = await createShortLink({
     type: "WORKSPACE",
@@ -100,7 +100,7 @@ export const createWorkspaceInvite = async (
       { expiresIn: inviteTtl }
   );
 
-  const destinationUrl = `${CLIENT_APP_URL}/invites/redeem/${token}`;
+  const destinationUrl = `${CLIENT_APP_URL}/invite/${token}`;
 
   const shortLink = await createShortLink({
     type: "INVITATION",
@@ -109,7 +109,6 @@ export const createWorkspaceInvite = async (
     workspaceId,
     expiresAt,
   });
-
   return {
     token,
     role,

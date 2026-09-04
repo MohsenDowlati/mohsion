@@ -6,8 +6,8 @@ import { authRoutes } from "./modules/auth/auth.routes.js";
 import {workspaceRoutes} from "./modules/workspace/workspace.routes.js";
 import {listRoutes} from "./modules/list/list.routes.js";
 import operationRoutes from "./modules/operation/operation.routes.js";
+import shortUrlRoutes from "./features/short-url/short-url.routes.js";
 import {taskRoutes} from "./modules/todo/todo.routes.js";
-import shortLinkRoutes from './features/short-url/short-url.routes.js'
 import { errorHandler } from "./middleware/error.middleware.js";
 import cors from "cors";
 
@@ -40,7 +40,8 @@ app.use("/api/workspace", workspaceRoutes);
 app.use("/api/list", listRoutes);
 app.use("/api/operation",operationRoutes);
 
-app.use(shortLinkRoutes);
+app.use("/s", shortUrlRoutes);
+
 
 app.use(errorHandler);
 
