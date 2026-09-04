@@ -35,3 +35,4 @@ export const workspaceTaskCacheKey = (workspaceId: string) => `${dataCachePrefix
 export const listTaskCacheKey = (listId: string) => `${dataCachePrefix}:list:${listId}:tasks`;
 export const userWorkspacesCacheKey = (userId: string) => `${dataCachePrefix}:user:${userId}:workspaces`;
 export const userWorkspaceCacheKey = (userId: string, workspaceId: string) => `${dataCachePrefix}:user:${userId}:workspace:${workspaceId}`;
+export const shortLinkCacheKey = (code: string) => `${dataCachePrefix}:short-link:${code}`;
