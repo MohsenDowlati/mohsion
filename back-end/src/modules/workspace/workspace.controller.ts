@@ -1,11 +1,27 @@
-import type { Request, Response } from "express";
-import { z } from "zod";
-import { asyncHandler } from "../../utils/asyncHandler.js";
+import type {Request, Response} from "express";
+import {z} from "zod";
+import {asyncHandler} from "../../utils/asyncHandler.js";
 import * as workspaceService from "./workspace.service.js";
-const workspaceSchema = z.object({ name: z.string().trim().min(1) });
-const inviteSchema = z.object({ role: z.enum(["editor", "viewer"]).default("editor") });
+
+const workspaceSchema = z.object({name: z.string().trim().min(1)});
+const inviteSchema = z.object({role: z.enum(["editor", "viewer"]).default("editor")});
+const paramsSchema = z.object({
+    token: z.string().min(1, "Invitation token is required"),
+});
 export const getMyWorkspaces = asyncHandler(async (req: Request, res: Response) => res.json(await workspaceService.getMyWorkspaces(req.user!.id)));
 export const getWorkspace = asyncHandler(async (req: Request, res: Response) => res.json(await workspaceService.getWorkspace(z.string().uuid().parse(req.params.workspaceId), req.user!.id)));
-export const createWorkspace = asyncHandler(async (req: Request, res: Response) => { const body = workspaceSchema.parse(req.body); res.status(201).json(await workspaceService.createWorkspaceWithOwner(body.name, req.user!.id)); });
-export const createInvite = asyncHandler(async (req: Request, res: Response) => { const body = inviteSchema.parse(req.body); res.status(201).json(await workspaceService.createWorkspaceInvite(z.string().uuid().parse(req.params.workspaceId), body.role, req.user!.id)); });
-export const redeemInvite = asyncHandler(async (req: Request, res: Response) => res.json(await workspaceService.redeemWorkspaceInvite(z.string().min(1).parse(req.params.token), req.user!.id)));
+export const createWorkspace = asyncHandler(async (req: Request, res: Response) => {
+    const body = workspaceSchema.parse(req.body);
+    res.status(201).json(await workspaceService.createWorkspaceWithOwner(body.name, req.user!.id));
+});
+export const createInvite = asyncHandler(async (req: Request, res: Response) => {
+    const body = inviteSchema.parse(req.body);
+    res.status(201).json(await workspaceService.createWorkspaceInvite(z.string().uuid().parse(req.params.workspaceId), body.role, req.user!.id));
+});
+export const redeemInvite = asyncHandler(async (req: Request, res: Response) => {
+    const { token } = paramsSchema.parse(req.params);
+
+    const workspace = await workspaceService.redeemWorkspaceInvite(token, req.user!.id);
+
+    res.status(200).json(workspace);
+});

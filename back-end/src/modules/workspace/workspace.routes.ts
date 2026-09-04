@@ -1,6 +1,7 @@
-import { Router } from "express";
-import { authMiddleware } from "../../middleware/auth.middleware.js";
-import { createWorkspace, getMyWorkspaces, getWorkspace, createInvite, redeemInvite } from "./workspace.controller.js";
+import {Router} from "express";
+import {authMiddleware} from "../../middleware/auth.middleware.js";
+import {createInvite, createWorkspace, getMyWorkspaces, getWorkspace, redeemInvite} from "./workspace.controller.js";
+
 export const workspaceRoutes = Router();
 workspaceRoutes.use(authMiddleware);
 workspaceRoutes.get("/", getMyWorkspaces);

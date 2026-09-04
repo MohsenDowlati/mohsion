@@ -15,9 +15,16 @@ export async function getCached<T>(key: string): Promise<T | null> {
   }
 }
 
-export async function setCached(key: string, value: unknown): Promise<void> {
-  try { await redis.set(key, JSON.stringify(value), "EX", TTL_SECONDS); }
-  catch (error) { logger.warn(`Cache write failed for ${key}`, error); }
+export async function setCached(
+    key: string,
+    value: unknown,
+    ttl: number = TTL_SECONDS
+): Promise<void> {
+  try {
+    await redis.set(key, JSON.stringify(value), "EX", ttl);
+  } catch (error) {
+    logger.warn(`Cache write failed for ${key}`, error);
+  }
 }
 
 export async function clearCached(...keys: string[]): Promise<void> {

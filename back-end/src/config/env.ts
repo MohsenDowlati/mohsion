@@ -24,6 +24,9 @@ export const REDIS_URL =
   process.env.REDIS_URL ?? `redis://${REDIS_HOST}:${REDIS_PORT}`;
 
 export const JWT_SECRET = required("JWT_SECRET", "dev-secret-change-me");
-export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? "7d";
+export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? "7d" as const;
 
+export const CLIENT_APP_URL = required("CLIENT_APP_URL", "http://localhost");
+
+export const INVITATION_EXPIRES_IN = process.env.INVITATION_EXPIRES_IN ?? "5d" as const;
 
