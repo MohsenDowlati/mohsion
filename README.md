@@ -17,6 +17,8 @@ Mohsion is a real-time, Notion-inspired productivity and task management applica
 - 🚀 **Performance:** Integrated caching and rate limiting for reliability.
 - 📝 *Upcoming:* Commenting system, offline editing, and audit logging.
 
+- 🔨 **Closed Issues:* I created a URL shortener system for invitation links
+
 ---
 
 ## 🏗️ Tech Stack
@@ -214,9 +216,9 @@ This project uses Swagger for interactive API documentation. Once the backend is
 Contributions are what make the open-source community amazing. Any contributions you make are **greatly appreciated**.
 
 1. Fork the project.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
+2. Create your feature branch (`git checkout -b features/AmazingFeature`).
 3. Commit your changes (`git commit -m 'feat: add some amazing feature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
+4. Push to the branch (`git push origin features/AmazingFeature`).
 5. Open a Pull Request.
 
 ---
